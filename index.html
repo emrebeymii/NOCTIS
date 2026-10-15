@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NOCTIS</title>
+<style>
+:root{--bg:#0e0e10;--s1:#161618;--s2:#1e1e21;--bd:#2a2a2e;--tx:#ececee;--mu:#9a9aa2;--ac:#FF7A00;--rd:#ff5d5d;--gr:#4ADE80;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
+*,*:before,*:after{box-sizing:inherit}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,"Inter","Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.logo{font-weight:800;letter-spacing:.32em;font-size:18px}.logo i{font-style:normal;color:var(--ac)}
+nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:flex;background:rgba(22,22,24,.94);backdrop-filter:blur(12px);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav .logo,nav .foot{display:none}
+nav button{flex:1;background:none;border:0;padding:12px 4px;color:var(--mu);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button b{font-size:18px;font-weight:400}
+nav button.on{color:var(--ac)}
+main{padding:16px 16px calc(90px + env(safe-area-inset-bottom,0px));max-width:880px;margin:0 auto}
+@media(min-width:860px){nav{top:0;right:auto;bottom:0;width:220px;flex-direction:column;border-top:0;border-right:1px solid var(--bd);padding:24px 12px;gap:4px}
+nav .logo{display:block;padding:0 12px 24px}nav .foot{display:block;margin-top:auto;color:var(--mu);font-size:12px;padding:0 12px}
+nav button{flex:none;flex-direction:row;gap:10px;font-size:14px;padding:10px 12px;border-radius:8px;text-align:left}
+nav button.on{background:var(--s2)}main{margin-left:220px;max-width:none;padding:32px 40px}main>div{max-width:880px;margin:auto}}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin:28px 0 10px;font-weight:600}
+.mu{color:var(--mu)}.sm{font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.stats{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:16px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px}
+a.card,.card.cl{cursor:pointer;text-align:left;width:100%}.card.cl:hover{border-color:#444}
+.btn{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;min-height:40px}
+.btn:hover{border-color:#555}.btn.p{background:var(--ac);border-color:var(--ac);color:#111;font-weight:600}.btn.d{color:var(--rd)}
+.ic{background:none;border:0;color:var(--mu);width:36px;height:36px;border-radius:8px}.ic:hover{background:var(--s2);color:var(--tx)}
+input,select,textarea{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;width:100%;min-height:40px}
+textarea{resize:vertical;min-height:64px}label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+.chip{background:none;border:1px solid var(--bd);border-radius:99px;padding:4px 12px;font-size:13px;color:var(--mu)}.chip.on{border-color:var(--ac);color:var(--ac)}
+.bar{height:4px;background:var(--bd);border-radius:9px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--ac)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.task{display:flex;gap:10px;align-items:flex-start;background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 8px 10px 12px;margin-bottom:8px}
+.task.over{border-color:var(--ac)}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #555;background:none;flex:none;margin-top:2px;color:#111;font-weight:800;line-height:1;padding:0}.chk.on{background:var(--ac);border-color:var(--ac)}
+.task.done .tt{text-decoration:line-through;color:var(--mu)}
+.tag{font-size:11px;border-radius:5px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)}.tag.high{color:var(--rd);border-color:var(--rd)}.tag.low{color:#7aa7ff}.tag.late{color:var(--ac);border-color:var(--ac)}
+.empty{text-align:center;padding:40px 16px;color:var(--mu);border:1px dashed var(--bd);border-radius:12px}.empty b{display:block;color:var(--tx);font-size:16px;margin-bottom:4px}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;justify-content:center}
+.md{background:var(--s1);border:1px solid var(--bd);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;max-height:92vh;overflow:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+@media(min-width:600px){.ov{align-items:center}.md{border-radius:16px}}
+.toasts{position:fixed;z-index:60;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--gr);border-radius:8px;padding:10px 16px;animation:up .2s}.toast.err{border-left-color:var(--rd)}
+@keyframes up{from{opacity:0;transform:translateY(8px)}}
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:15;width:52px;height:52px;border-radius:50%;border:0;background:var(--ac);color:#111;font-size:28px;box-shadow:0 6px 20px rgba(255,122,0,.35)}
+@media(min-width:860px){.fab{bottom:28px;right:32px}}
+.drag{opacity:.4}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.0/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useRef}=React;
+const KEY='noctis.v1';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const COLORS=['#FF7A00','#F5C542','#4ADE80','#38BDF8','#A78BFA','#F472B6'];
+const PRI={low:'Düşük',normal:'Normal',high:'Yüksek'};
+const PO={high:0,normal:1,low:2};
+const CATS=['İş','Eğitim','Kişisel','Finans','Projeler'].map(n=>({id:'c-'+n,name:n}));
+const T=(title,pri='normal',due=null,done=false)=>({id:uid(),title,desc:'',done,doneAt:done?today():null,pri,due,created:today()});
+const seed=()=>({name:'',cats:CATS,lists:[
+ {id:uid(),name:'Haftalık plan',desc:'Bu haftanın öncelikleri',color:'#FF7A00',cat:'c-İş',created:today(),used:Date.now(),tasks:[T('NOCTIS\'i keşfet','high',today()),T('Yeni bir liste oluştur'),T('Örnek verileri sil','low'),T('Yedek dışa aktar','normal',null,true)]},
+ {id:uid(),name:'Alışveriş',desc:'',color:'#4ADE80',cat:'c-Kişisel',created:today(),used:Date.now()-1e6,tasks:[T('Süt'),T('Ekmek'),T('Kahve','low')]}]});
+const isStr=x=>typeof x==='string';
+function validate(d){
+ if(!d||typeof d!=='object'||!Array.isArray(d.cats)||!Array.isArray(d.lists))throw new Error('Geçersiz NOCTIS yedeği');
+ const cats=d.cats.map(c=>{if(!c||!isStr(c.id)||!isStr(c.name))throw new Error('Kategori verisi bozuk');return{id:c.id,name:c.name.slice(0,40)}});
+ const lists=d.lists.map(l=>{if(!l||!isStr(l.id)||!isStr(l.name)||!Array.isArray(l.tasks))throw new Error('Liste verisi bozuk');
+  return{id:l.id,name:l.name.slice(0,80),desc:isStr(l.desc)?l.desc:'',color:isStr(l.color)?l.color:COLORS[0],cat:isStr(l.cat)?l.cat:'',created:isStr(l.created)?l.created:today(),used:+l.used||0,
+  tasks:l.tasks.map(t=>{if(!t||!isStr(t.id)||!isStr(t.title))throw new Error('Görev verisi bozuk');
+   return{id:t.id,title:t.title.slice(0,200),desc:isStr(t.desc)?t.desc:'',done:!!t.done,doneAt:isStr(t.doneAt)?t.doneAt:null,pri:PO[t.pri]!==undefined?t.pri:'normal',due:isStr(t.due)&&t.due?t.due:null,created:isStr(t.created)?t.created:today()}})}});
+ return{name:isStr(d.name)?d.name.slice(0,40):'',cats,lists};
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return validate(JSON.parse(r))}catch(e){}return seed()}
+const fmt=d=>d?new Date(d+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):'';
+
+const Logo=()=><span className="logo">N<i>O</i>CTIS</span>;
+function Modal({title,onClose,children}){
+ useEffect(()=>{const f=e=>e.key==='Escape'&&onClose();window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
+ return <div className="ov" onMouseDown={e=>e.target===e.currentTarget&&onClose()}><div className="md" role="dialog" aria-modal="true" aria-label={title}><h1 style={{fontSize:18}}>{title}</h1>{children}</div></div>;
+}
+function ListForm({data,cats,onSave,onClose}){
+ const [f,setF]=useState(data||{name:'',desc:'',color:COLORS[0],cat:cats[0]?.id||''});
+ const [nc,setNc]=useState('');
+ const set=k=>e=>setF({...f,[k]:e.target.value});
+ const go=e=>{e.preventDefault();if(!f.name.trim())return;onSave({...f,name:f.name.trim()},nc.trim())};
+ return <Modal title={data?'Listeyi düzenle':'Yeni liste'} onClose={onClose}><form onSubmit={go}>
+  <label htmlFor="ln">Ad</label><input id="ln" autoFocus value={f.name} onChange={set('name')} maxLength={80} required/>
+  <label htmlFor="ld">Açıklama</label><input id="ld" value={f.desc} onChange={set('desc')}/>
+  <label>Renk</label><div className="row">{COLORS.map(c=><button type="button" key={c} aria-label={'Renk '+c} aria-pressed={f.color===c} onClick={()=>setF({...f,color:c})} style={{width:32,height:32,borderRadius:'50%',background:c,border:f.color===c?'3px solid #fff':'3px solid transparent'}}/>)}</div>
+  <label htmlFor="lc">Kategori</label><select id="lc" value={f.cat} onChange={set('cat')}><option value="">Kategorisiz</option>{cats.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+  <input aria-label="Yeni kategori" placeholder="veya yeni kategori oluştur" value={nc} onChange={e=>setNc(e.target.value)} style={{marginTop:8}}/>
+  <div className="row" style={{marginTop:20,justifyContent:'flex-end'}}><button type="button" className="btn" onClick={onClose}>Vazgeç</button><button className="btn p">Kaydet</button></div></form></Modal>;
+}
+function TaskForm({data,onSave,onClose}){
+ const [f,setF]=useState(data||{title:'',desc:'',pri:'normal',due:''});
+ const set=k=>e=>setF({...f,[k]:e.target.value});
+ const go=e=>{e.preventDefault();if(f.title.trim())onSave({...f,title:f.title.trim(),due:f.due||null})};
+ return <Modal title={data?'Görevi düzenle':'Yeni görev'} onClose={onClose}><form onSubmit={go}>
+  <label htmlFor="tt">Başlık</label><input id="tt" autoFocus value={f.title} onChange={set('title')} maxLength={200} required/>
+  <label htmlFor="td">Açıklama (isteğe bağlı)</label><textarea id="td" value={f.desc} onChange={set('desc')}/>
+  <div className="row" style={{alignItems:'flex-start'}}><div className="sp"><label htmlFor="tp">Öncelik</label><select id="tp" value={f.pri} onChange={set('pri')}>{Object.entries(PRI).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+  <div className="sp"><label htmlFor="tdu">Son tarih</label><input id="tdu" type="date" value={f.due||''} onChange={set('due')}/></div></div>
+  <div className="row" style={{marginTop:20,justifyContent:'flex-end'}}><button type="button" className="btn" onClick={onClose}>Vazgeç</button><button className="btn p">Kaydet</button></div></form></Modal>;
+}
+const Empty=({t,d,a})=><div className="empty"><b>{t}</b>{d}{a&&<div style={{marginTop:14}}>{a}</div>}</div>;
+const Progress=({l})=>{const n=l.tasks.length,k=l.tasks.filter(t=>t.done).length;return <div className="bar"><i style={{width:(n?k/n*100:0)+'%',background:l.color}}/></div>};
+
+function TaskRow({t,list,i,n,canMove,onToggle,onEdit,onDel,onMove,dnd}){
+ const late=!t.done&&t.due&&t.due<today();
+ return <div className={'task'+(t.done?' done':'')+(late?' over':'')} {...dnd}>
+  <button className={'chk'+(t.done?' on':'')} role="checkbox" aria-checked={t.done} aria-label={'Tamamla: '+t.title} onClick={onToggle}>{t.done?'✓':''}</button>
+  <div className="sp" style={{minWidth:0}}><div className="tt" style={{wordBreak:'break-word'}}>{t.title}</div>
+   {t.desc&&<div className="mu sm">{t.desc}</div>}
+   <div className="row" style={{marginTop:4}}><span className={'tag '+t.pri}>{PRI[t.pri]}</span>{t.due&&<span className={'tag'+(late?' late':'')}>{late?'Gecikti · ':''}{fmt(t.due)}</span>}{list&&<span className="tag"><span className="dot" style={{background:list.color,width:7,height:7}}/> {list.name}</span>}</div></div>
+  {canMove&&<div className="row" style={{gap:0,flexDirection:'column'}}><button className="ic" style={{height:22}} disabled={i===0} aria-label="Yukarı taşı" onClick={()=>onMove(-1)}>▲</button><button className="ic" style={{height:22}} disabled={i===n-1} aria-label="Aşağı taşı" onClick={()=>onMove(1)}>▼</button></div>}
+  <button className="ic" aria-label="Düzenle" onClick={onEdit}>✎</button><button className="ic" aria-label="Sil" onClick={onDel}>✕</button></div>;
+}
+
+function Home({s,go,touchT,newTask,newList}){
+ const td=today(),all=s.lists.flatMap(l=>l.tasks.map(t=>({t,l})));
+ const done=all.filter(x=>x.t.doneAt===td&&x.t.done).length,open=all.filter(x=>!x.t.done).length;
+ const pct=all.length?Math.round(all.filter(x=>x.t.done).length/all.length*100):0;
+ const due=all.filter(x=>!x.t.done&&x.t.due&&x.t.due<=td).sort((a,b)=>a.t.due.localeCompare(b.t.due));
+ const recent=[...s.lists].sort((a,b)=>b.used-a.used).slice(0,4);
+ const h=new Date().getHours(),g=h<6?'İyi geceler':h<12?'Günaydın':h<18?'İyi günler':'İyi akşamlar';
+ return <div><div className="mu sm">{new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+  <h1>{g}{s.name?', '+s.name:''}</h1>
+  <div className="stats"><div className="card stat"><b>{done}</b><span className="mu sm">Bugün biten</span></div><div className="card stat"><b>{open}</b><span className="mu sm">Bekleyen</span></div><div className="card stat"><b style={{color:'var(--ac)'}}>%{pct}</b><span className="mu sm">Tamamlanma</span></div></div>
+  <div className="row" style={{marginTop:14}}><button className="btn p" onClick={newTask}>+ Görev ekle</button><button className="btn" onClick={newList}>+ Yeni liste</button></div>
+  <h2>Bugünün görevleri</h2>
+  {due.length?due.map(({t,l})=><TaskRow key={t.id} t={t} list={l} onToggle={()=>touchT(l.id,t.id)} onEdit={()=>go('list',l.id)} onDel={()=>go('list',l.id)}/>):<Empty t="Bugün için görev yok" d="Son tarihi bugün olan veya geciken görevler burada görünür."/>}
+  <h2>Son kullanılan listeler</h2>
+  {recent.length?<div className="grid">{recent.map(l=><button key={l.id} className="card cl" onClick={()=>go('list',l.id)}><div className="row"><span className="dot" style={{background:l.color}}/><b>{l.name}</b></div><div className="mu sm">{l.tasks.filter(t=>t.done).length}/{l.tasks.length} tamamlandı</div><Progress l={l}/></button>)}</div>:<Empty t="Henüz liste yok" d="İlk listeni oluşturarak başla."/>}
+ </div>;
+}
+
+function Lists({s,go,newList,editList,delList}){
+ const [q,setQ]=useState(''),[cat,setCat]=useState('');
+ const rs=s.lists.filter(l=>(!cat||l.cat===cat)&&(l.name+' '+l.desc).toLowerCase().includes(q.toLowerCase()));
+ return <div><div className="row"><h1 className="sp">Listeler</h1><button className="btn p" onClick={newList}>+ Yeni liste</button></div>
+  <input id="search" aria-label="Liste ara" placeholder="Liste ara…  ( / )" value={q} onChange={e=>setQ(e.target.value)} style={{margin:'12px 0'}}/>
+  <div className="row" style={{marginBottom:14}}><button className={'chip'+(!cat?' on':'')} onClick={()=>setCat('')}>Tümü</button>{s.cats.map(c=><button key={c.id} className={'chip'+(cat===c.id?' on':'')} onClick={()=>setCat(c.id)}>{c.name}</button>)}</div>
+  {rs.length?<div className="grid">{rs.map(l=>{const c=s.cats.find(x=>x.id===l.cat);return <div key={l.id} className="card"><button className="card cl" style={{border:0,padding:0,background:'none'}} onClick={()=>go('list',l.id)}><div className="row"><span className="dot" style={{background:l.color}}/><b>{l.name}</b></div>{l.desc&&<div className="mu sm">{l.desc}</div>}<div className="mu sm">{c?c.name+' · ':''}{l.tasks.filter(t=>t.done).length}/{l.tasks.length} görev</div><Progress l={l}/></button>
+   <div className="row" style={{justifyContent:'flex-end',marginTop:6}}><button className="ic" aria-label="Listeyi düzenle" onClick={()=>editList(l)}>✎</button><button className="ic" aria-label="Listeyi sil" onClick={()=>delList(l)}>✕</button></div></div>})}</div>
+  :s.lists.length?<Empty t="Sonuç bulunamadı" d="Arama veya kategori filtresini değiştirmeyi dene."/>:<Empty t="Hiç listen yok" d="Görevlerini düzenlemek için bir liste oluştur." a={<button className="btn p" onClick={newList}>+ Yeni liste</button>}/>}
+ </div>;
+}
+
+function ListView({l,cat,back,patch,ask,toast,editList,delList}){
+ const [q,setQ]=useState(''),[fil,setFil]=useState('all'),[sort,setSort]=useState('manual'),[ed,setEd]=useState(null),[drag,setDrag]=useState(null);
+ const set=fn=>patch(l.id,ts=>fn(ts));
+ const manual=sort==='manual'&&fil==='all'&&!q;
+ const rows=useMemo(()=>{
+  let r=l.tasks.filter(t=>(fil==='all'||(fil==='done')===t.done)&&(t.title+' '+t.desc).toLowerCase().includes(q.toLowerCase()));
+  if(sort==='pri')r=[...r].sort((a,b)=>PO[a.pri]-PO[b.pri]);
+  if(sort==='due')r=[...r].sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+  if(sort==='new')r=[...r].sort((a,b)=>b.created.localeCompare(a.created));
+  return r},[l,q,fil,sort]);
+ const move=(id,to)=>set(ts=>{const i=ts.findIndex(t=>t.id===id),j=Math.max(0,Math.min(ts.length-1,to));if(i<0||i===j)return ts;const a=[...ts];const[x]=a.splice(i,1);a.splice(j,0,x);return a});
+ const save=f=>{if(ed.id){set(ts=>ts.map(t=>t.id===ed.id?{...t,...f}:t));toast('Görev güncellendi')}else{set(ts=>[...ts,{id:uid(),done:false,doneAt:null,created:today(),...f}]);toast('Görev eklendi')}setEd(null)};
+ useEffect(()=>{const f=e=>{if(e.key==='n'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)&&!document.querySelector('.ov')){e.preventDefault();setEd({})}};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
+ return <div><button className="btn" onClick={back}>← Listeler</button>
+  <div className="row" style={{margin:'14px 0 4px'}}><span className="dot" style={{background:l.color,width:14,height:14}}/><h1 className="sp">{l.name}</h1><button className="ic" aria-label="Listeyi düzenle" onClick={()=>editList(l)}>✎</button><button className="ic" aria-label="Listeyi sil" onClick={()=>delList(l)}>✕</button></div>
+  <div className="mu sm">{cat?cat.name+' · ':''}{l.desc}</div><Progress l={l}/>
+  <input id="search" aria-label="Görev ara" placeholder="Görev ara…  ( / )   ·   yeni görev: n" value={q} onChange={e=>setQ(e.target.value)} style={{margin:'14px 0 10px'}}/>
+  <div className="row" style={{marginBottom:12}}>{[['all','Tümü'],['open','Bekleyen'],['done','Biten']].map(([k,v])=><button key={k} className={'chip'+(fil===k?' on':'')} onClick={()=>setFil(k)}>{v}</button>)}
+   <select aria-label="Sırala" value={sort} onChange={e=>setSort(e.target.value)} style={{width:'auto',minHeight:32,padding:'4px 8px',marginLeft:'auto'}}><option value="manual">Elle sıralama</option><option value="pri">Öncelik</option><option value="due">Son tarih</option><option value="new">En yeni</option></select></div>
+  {rows.length?rows.map((t,i)=><TaskRow key={t.id} t={t} i={i} n={rows.length} canMove={manual}
+   onToggle={()=>set(ts=>ts.map(x=>x.id===t.id?{...x,done:!x.done,doneAt:!x.done?today():null}:x))} onEdit={()=>setEd(t)}
+   onDel={()=>ask('“'+t.title+'” görevi silinsin mi?',()=>{set(ts=>ts.filter(x=>x.id!==t.id));toast('Görev silindi')})}
+   onMove={d=>move(t.id,l.tasks.findIndex(x=>x.id===t.id)+d)}
+   dnd={manual?{draggable:true,className:'task'+(drag===t.id?' drag':''),onDragStart:()=>setDrag(t.id),onDragEnd:()=>setDrag(null),onDragOver:e=>e.preventDefault(),onDrop:()=>{if(drag&&drag!==t.id)move(drag,l.tasks.findIndex(x=>x.id===t.id));setDrag(null)}}:{}}/>)
+   :l.tasks.length?<Empty t="Sonuç bulunamadı" d="Arama veya filtreyi değiştir."/>:<Empty t="Bu liste boş" d="İlk görevini ekle." a={<button className="btn p" onClick={()=>setEd({})}>+ Görev ekle</button>}/>}
+  {manual&&rows.length>1&&<div className="mu sm" style={{textAlign:'center'}}>Sürükleyerek veya ▲▼ ile sırala</div>}
+  <button className="fab" aria-label="Yeni görev" onClick={()=>setEd({})}>+</button>
+  {ed&&<TaskForm data={ed.id?ed:null} onSave={save} onClose={()=>setEd(null)}/>}
+ </div>;
+}
+
+function Settings({s,setS,ask,toast}){
+ const [nm,setNm]=useState(s.name),[nc,setNc]=useState(''),fr=useRef();
+ const exp=()=>{const b=new Blob([JSON.stringify({app:'NOCTIS',v:1,...s},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='noctis-yedek-'+today()+'.json';a.click();toast('Yedek dışa aktarıldı')};
+ const imp=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=validate(JSON.parse(r.result));ask('Mevcut tüm verilerin yerine “'+f.name+'” içindeki '+d.lists.length+' liste yüklensin mi?',()=>{setS(d);toast('Yedek içe aktarıldı')})}catch(err){toast('İçe aktarılamadı: '+(err.message.includes('JSON')?'dosya geçerli JSON değil':err.message),1)}};
+  r.onerror=()=>toast('Dosya okunamadı',1);r.readAsText(f)};
+ return <div><h1>Ayarlar</h1>
+  <h2>Profil</h2><div className="row"><input aria-label="Adın" placeholder="Adın (karşılama için)" value={nm} onChange={e=>setNm(e.target.value)} style={{flex:1}}/><button className="btn" onClick={()=>{setS(p=>({...p,name:nm.trim()}));toast('Ad kaydedildi')}}>Kaydet</button></div>
+  <h2>Kategoriler</h2><div className="row">{s.cats.map(c=><span key={c.id} className="chip">{c.name} <button className="ic" style={{width:22,height:22}} aria-label={c.name+' kategorisini sil'} onClick={()=>ask('“'+c.name+'” kategorisi silinsin mi? Listeler kategorisiz kalır.',()=>{setS(p=>({...p,cats:p.cats.filter(x=>x.id!==c.id),lists:p.lists.map(l=>l.cat===c.id?{...l,cat:''}:l)}));toast('Kategori silindi')})}>✕</button></span>)}</div>
+  <div className="row" style={{marginTop:10}}><input aria-label="Yeni kategori" placeholder="Yeni kategori" value={nc} onChange={e=>setNc(e.target.value)} style={{flex:1}}/><button className="btn" onClick={()=>{const n=nc.trim();if(!n)return;if(s.cats.some(c=>c.name.toLowerCase()===n.toLowerCase()))return toast('Bu kategori zaten var',1);setS(p=>({...p,cats:[...p.cats,{id:uid(),name:n}]}));setNc('');toast('Kategori eklendi')}}>Ekle</button></div>
+  <h2>Veri</h2><div className="row"><button className="btn" onClick={exp}>Yedeği dışa aktar (JSON)</button><button className="btn" onClick={()=>fr.current.click()}>Yedeği içe aktar</button><input ref={fr} type="file" accept="application/json,.json" hidden onChange={imp}/></div>
+  <div className="row" style={{marginTop:10}}><button className="btn" onClick={()=>ask('Örnek veriler yeniden yüklensin mi? Mevcut verilerin silinir.',()=>{setS({...seed(),name:s.name});toast('Örnek veriler yüklendi')})}>Örnek verileri yükle</button><button className="btn d" onClick={()=>ask('Tüm listeler ve görevler kalıcı olarak silinsin mi?',()=>{setS({...s,lists:[]});toast('Tüm veriler silindi')})}>Tüm verileri sil</button></div>
+  <p className="mu sm" style={{marginTop:24}}>Veriler yalnızca bu cihazda, tarayıcının localStorage alanında saklanır.</p></div>;
+}
+
+function App(){
+ const [s,setS]=useState(load),[v,setV]=useState({p:'home'}),[cf,setCf]=useState(null),[ts,setTs]=useState([]),[lf,setLf]=useState(null),[tf,setTf]=useState(false);
+ useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){toast('Veriler kaydedilemedi (depolama dolu veya kapalı)',1)}},[s]);
+ const toast=(m,err)=>{const id=uid();setTs(t=>[...t,{id,m,err}]);setTimeout(()=>setTs(t=>t.filter(x=>x.id!==id)),3200)};
+ const ask=(text,ok)=>setCf({text,ok});
+ const go=(p,id)=>{setV({p,id});if(id)setS(x=>({...x,lists:x.lists.map(l=>l.id===id?{...l,used:Date.now()}:l)}));window.scrollTo(0,0)};
+ const patch=(id,fn)=>setS(x=>({...x,lists:x.lists.map(l=>l.id===id?{...l,used:Date.now(),tasks:fn(l.tasks)}:l)}));
+ const touchT=(lid,tid)=>patch(lid,ts=>ts.map(t=>t.id===tid?{...t,done:!t.done,doneAt:!t.done?today():null}:t));
+ const saveList=(f,nc)=>{let cat=f.cat,cats=s.cats;if(nc){const ex=cats.find(c=>c.name.toLowerCase()===nc.toLowerCase());if(ex)cat=ex.id;else{cat=uid();cats=[...cats,{id:cat,name:nc}]}}
+  setS(x=>({...x,cats,lists:f.id?x.lists.map(l=>l.id===f.id?{...l,...f,cat}:l):[{...f,cat,id:uid(),created:today(),used:Date.now(),tasks:[]},...x.lists]}));toast(f.id?'Liste güncellendi':'Liste oluşturuldu');setLf(null)};
+ const delList=l=>ask('“'+l.name+'” listesi ve içindeki '+l.tasks.length+' görev silinsin mi?',()=>{setS(x=>({...x,lists:x.lists.filter(y=>y.id!==l.id)}));if(v.id===l.id)setV({p:'lists'});toast('Liste silindi')});
+ const newTask=()=>{if(!s.lists.length)return toast('Önce bir liste oluştur',1);setTf(true)};
+ useEffect(()=>{const f=e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){const i=document.getElementById('search');if(i){e.preventDefault();i.focus()}}};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
+ const cur=v.p==='list'&&s.lists.find(l=>l.id===v.id);
+ const nav=[['home','Panel','◧'],['lists','Listeler','☰'],['settings','Ayarlar','⚙']];
+ return <>
+  <nav aria-label="Ana gezinme"><Logo/>{nav.map(([k,n,i])=><button key={k} className={(v.p===k||(k==='lists'&&v.p==='list'))?'on':''} onClick={()=>go(k)} aria-current={v.p===k?'page':undefined}><b aria-hidden>{i}</b>{n}</button>)}<div className="foot">Kişisel görev ve kontrol listesi</div></nav>
+  <main><div>
+   {v.p==='home'&&<Home s={s} go={go} touchT={touchT} newList={()=>setLf({})} newTask={newTask}/>}
+   {v.p==='lists'&&<Lists s={s} go={go} newList={()=>setLf({})} editList={l=>setLf(l)} delList={delList}/>}
+   {cur&&<ListView key={cur.id} l={cur} cat={s.cats.find(c=>c.id===cur.cat)} back={()=>go('lists')} patch={patch} ask={ask} toast={toast} editList={l=>setLf(l)} delList={delList}/>}
+   {v.p==='list'&&!cur&&<Empty t="Liste bulunamadı" d="Silinmiş olabilir." a={<button className="btn" onClick={()=>go('lists')}>Listelere dön</button>}/>}
+   {v.p==='settings'&&<Settings s={s} setS={setS} ask={ask} toast={toast}/>}
+  </div></main>
+  {lf&&<ListForm data={lf.id?lf:null} cats={s.cats} onSave={saveList} onClose={()=>setLf(null)}/>}
+  {tf&&<Modal title="Hangi listeye eklensin?" onClose={()=>setTf(false)}>{s.lists.map(l=><button key={l.id} className="btn" style={{width:'100%',textAlign:'left',marginBottom:8}} onClick={()=>{setTf(false);go('list',l.id)}}><span className="dot" style={{background:l.color}}/> {l.name}</button>)}</Modal>}
+  {cf&&<Modal title="Onay" onClose={()=>setCf(null)}><p>{cf.text}</p><div className="row" style={{justifyContent:'flex-end'}}><button className="btn" autoFocus onClick={()=>setCf(null)}>Vazgeç</button><button className="btn p" onClick={()=>{cf.ok();setCf(null)}}>Onayla</button></div></Modal>}
+  <div className="toasts" role="status" aria-live="polite">{ts.map(t=><div key={t.id} className={'toast'+(t.err?' err':'')}>{t.m}</div>)}</div>
+ </>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
