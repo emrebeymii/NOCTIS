@@ -54,6 +54,34 @@ textarea{resize:vertical;min-height:64px}label{display:block;font-size:13px;colo
 @media(min-width:860px){.fab{bottom:28px;right:32px}}
 .drag{opacity:.4}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* v3: derinlik, ışıma, animasyon */
+html,body{background:radial-gradient(900px 520px at 85% -8%,rgba(255,122,0,.11),transparent 60%),var(--bg);background-attachment:fixed}
+h1{letter-spacing:-.02em}
+.card{background:linear-gradient(180deg,#1b1b1f,var(--s1));box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 8px 24px rgba(0,0,0,.35)}
+.card,.task,.btn,.chk{transition:transform .18s,box-shadow .2s,border-color .2s,opacity .2s}
+.card.cl:hover{border-color:rgba(255,122,0,.55);box-shadow:0 0 0 1px rgba(255,122,0,.25),0 10px 30px rgba(255,122,0,.1);transform:translateY(-2px)}
+.btn:active,.chk:active{transform:scale(.95)}
+.btn.p{background:linear-gradient(180deg,#ff8c24,#ff7a00);box-shadow:0 4px 18px rgba(255,122,0,.35)}
+nav button.on b{filter:drop-shadow(0 0 6px rgba(255,122,0,.8))}
+.chip.on{background:rgba(255,122,0,.12)}
+.bar i{transition:width .6s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 10px rgba(255,122,0,.35)}
+.task{animation:fi .28s backwards}.task.done{opacity:.6}
+.chk.on{box-shadow:0 0 12px rgba(255,122,0,.65);animation:pop .32s}
+main>div>div,.grid>*{animation:fi .32s ease backwards}
+.md{animation:sheet .26s cubic-bezier(.2,.8,.2,1)}.ov{animation:fo .2s}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes sheet{from{opacity:0;transform:translateY(32px)}}
+@keyframes fo{from{opacity:0}}
+.hero{display:flex;align-items:center;gap:20px;margin-top:16px;background:radial-gradient(120% 150% at 0 0,rgba(255,122,0,.18),transparent 55%),linear-gradient(180deg,#1b1b1f,var(--s1))}
+.ring{width:132px;height:132px;flex:none}
+.seg{fill:none;stroke:var(--bd);stroke-width:9;stroke-linecap:round}
+.seg.on{stroke:var(--ac);filter:drop-shadow(0 0 4px rgba(255,122,0,.7));animation:seg .5s backwards}
+@keyframes seg{from{opacity:0;stroke:var(--bd)}}
+.rt{fill:var(--tx);font:700 25px -apple-system,"Inter",sans-serif}
+.hs{display:flex;flex-direction:column;gap:14px}.hs b{display:block;font-size:30px;line-height:1.05}
+@media(prefers-reduced-motion:reduce){.seg.on{animation:none!important}}
 </style>
 <meta name="theme-color" content="#0e0e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -138,6 +166,13 @@ function TaskRow({t,list,i,n,canMove,onToggle,onEdit,onDel,onMove,dnd}){
   <button className="ic" aria-label="Düzenle" onClick={onEdit}>✎</button><button className="ic" aria-label="Sil" onClick={onDel}>✕</button></div>;
 }
 
+function Ring({pct}){
+ const N=16,R=48,C=60,on=Math.round(pct/100*N),pt=a=>[C+R*Math.sin(a),C-R*Math.cos(a)];
+ return <svg className="ring" viewBox="0 0 120 120" role="img" aria-label={'Tamamlanma yüzde '+pct}>
+  {Array.from({length:N},(_,i)=>{const[x0,y0]=pt(i/N*6.2832+.07),[x1,y1]=pt((i+1)/N*6.2832-.07);
+   return <path key={i} d={'M'+x0+' '+y0+'A'+R+' '+R+' 0 0 1 '+x1+' '+y1} className={i<on?'seg on':'seg'} style={{animationDelay:i*35+'ms'}}/>})}
+  <text x="60" y="68" textAnchor="middle" className="rt">%{pct}</text></svg>;
+}
 function Home({s,go,touchT,newTask,newList}){
  const td=today(),all=s.lists.flatMap(l=>l.tasks.map(t=>({t,l})));
  const done=all.filter(x=>x.t.doneAt===td&&x.t.done).length,open=all.filter(x=>!x.t.done).length;
@@ -147,7 +182,7 @@ function Home({s,go,touchT,newTask,newList}){
  const h=new Date().getHours(),g=h<6?'İyi geceler':h<12?'Günaydın':h<18?'İyi günler':'İyi akşamlar';
  return <div><div className="mu sm">{new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
   <h1>{g}{s.name?', '+s.name:''}</h1>
-  <div className="stats"><div className="card stat"><b>{done}</b><span className="mu sm">Bugün biten</span></div><div className="card stat"><b>{open}</b><span className="mu sm">Bekleyen</span></div><div className="card stat"><b style={{color:'var(--ac)'}}>%{pct}</b><span className="mu sm">Tamamlanma</span></div></div>
+  <div className="card hero"><Ring pct={pct}/><div className="hs"><div><b>{done}</b><span className="mu sm">Bugün biten</span></div><div><b>{open}</b><span className="mu sm">Bekleyen</span></div></div></div>
   <div className="row" style={{marginTop:14}}><button className="btn p" onClick={newTask}>+ Görev ekle</button><button className="btn" onClick={newList}>+ Yeni liste</button></div>
   <h2>Bugünün görevleri</h2>
   {due.length?due.map(({t,l})=><TaskRow key={t.id} t={t} list={l} onToggle={()=>touchT(l.id,t.id)} onEdit={()=>go('list',l.id)} onDel={()=>go('list',l.id)}/>):<Empty t="Bugün için görev yok" d="Son tarihi bugün olan veya geciken görevler burada görünür."/>}
