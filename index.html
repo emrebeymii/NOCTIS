@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>NOCTIS</title>
 <style>
 :root{--bg:#0e0e10;--s1:#161618;--s2:#1e1e21;--bd:#2a2a2e;--tx:#ececee;--mu:#9a9aa2;--ac:#FF7A00;--rd:#ff5d5d;--gr:#4ADE80;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:dark}
@@ -123,6 +123,26 @@ nav.hide{display:none}@media(min-width:860px){nav.hide~main{margin-left:0}}
 .stage{flex:1;min-height:0;width:100%;aspect-ratio:auto}
 .clk{font-size:min(15vw,66px)}
 @media(min-width:860px){.amb{left:220px;padding-bottom:28px}}
+
+/* v6: zoom engeli, panel/listeler sadeleşme, odak detayları */
+*{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}html,body{overscroll-behavior:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select{font-size:16px;-webkit-user-select:text;user-select:text}
+.amb::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(75% 50% at 50% 38%,var(--tint,transparent),transparent 72%)}
+h1{font-weight:300;font-size:28px}h2{letter-spacing:.14em;margin-top:34px}
+.card{background:var(--s1);box-shadow:none;border-radius:14px;padding:16px}
+.card.cl:hover{box-shadow:none;transform:none}
+.hero{background:radial-gradient(120% 150% at 0 0,rgba(255,122,0,.08),transparent 55%),var(--s1)}
+.task{background:transparent;border:0;border-bottom:1px solid var(--bd);border-radius:0;padding:14px 4px}
+.task.over{border-bottom-color:var(--ac)}
+.grid{gap:14px}
+.dim{transition:opacity 1.2s}.foc.deep .dim{opacity:0;pointer-events:none}
+.res{text-align:center;margin:12px 0;padding:14px;border:1px solid var(--bd);border-radius:14px;animation:fi .8s ease backwards}
+.wk{display:flex;gap:10px;justify-content:center;align-items:flex-end;margin-top:18px;height:64px}
+.wk div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;width:32px}
+.wk i{width:6px;border-radius:3px;background:var(--bd);display:block}.wk div:last-child i{background:var(--ac)}
+.wk span{font-size:10px;color:var(--mu)}
 </style>
 <meta name="theme-color" content="#0e0e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -306,22 +326,23 @@ function loadFs(){let r=null;try{r=JSON.parse(localStorage.getItem(FK))}catch(e)
 const rec=(p,done)=>{const a=p.a;if(a.phase!=='work')return p.sessions;const e=el(a),act=a.mode==='stop'?e:Math.min(e,a.total);if(act<1000)return p.sessions;
  return[...p.sessions,{id:uid(),ts:Date.now(),mode:a.mode,task:a.taskKey,planned:a.total,actual:act,completed:done}].slice(-200)};
 const FA={
- start:p=>{const a=p.a;return{...p,a:a.status==='idle'?{...a,status:'run',startedAt:Date.now(),acc:0,total:mk(p.prefs,a.mode,a.phase,p.custom).total}:{...a,status:'run',startedAt:Date.now()}}},
+ start:p=>{const a=p.a;return{...p,a:a.status==='idle'?{...a,res:null,status:'run',startedAt:Date.now(),acc:0,total:mk(p.prefs,a.mode,a.phase,p.custom).total}:{...a,res:null,status:'run',startedAt:Date.now()}}},
  pause:p=>({...p,a:{...p.a,status:'pause',acc:el(p.a),startedAt:0}}),
  complete:p=>{const a=p.a;if(a.status!=='run'||a.mode==='stop'||el(a)<a.total)return p;const sessions=rec(p,true);
-  if(a.mode==='pomo'){const c=a.phase==='work'?p.cycle+1:p.cycle,ph=a.phase==='work'?(c%4===0?'long':'short'):'work';return{...p,sessions,cycle:c,a:{...mk(p.prefs,'pomo',ph,p.custom,a.taskKey),msg:a.phase==='work'?'Odaklanma tamamlandı':'Mola bitti'}}}
-  return{...p,sessions,a:{...a,status:'done',acc:a.total,startedAt:0}}},
+  if(a.mode==='pomo'){const c=a.phase==='work'?p.cycle+1:p.cycle,ph=a.phase==='work'?(c%4===0?'long':'short'):'work';return{...p,sessions,cycle:c,a:{...mk(p.prefs,'pomo',ph,p.custom,a.taskKey),msg:a.phase==='work'?'Odaklanma tamamlandı':'Mola bitti',res:a.phase==='work'?{ms:a.total,task:a.taskKey}:null}}}
+  return{...p,sessions,a:{...a,status:'done',acc:a.total,startedAt:0,res:{ms:a.total,task:a.taskKey}}}},
  finish:p=>{const a=p.a,done=a.mode==='stop'||el(a)>=a.total;return{...p,sessions:rec(p,done),a:mk(p.prefs,a.mode,'work',p.custom,a.taskKey)}},
  skip:p=>{const a=p.a;return{...p,sessions:rec(p,false),a:mk(p.prefs,'pomo',a.phase==='work'?'short':'work',p.custom,a.taskKey)}},
  mode:(p,m)=>({...p,a:mk(p.prefs,m,'work',p.custom,p.a.taskKey)}),
  custom:(p,c)=>({...p,custom:c,a:mk(p.prefs,'custom','work',c,p.a.taskKey)}),
  task:(p,k)=>({...p,a:{...p.a,taskKey:k}}),
+ clr:p=>({...p,a:{...p.a,res:null}}),
  reset:p=>({...p,a:mk(p.prefs,p.a.mode,'work',p.custom,p.a.taskKey)})
 };
 const fmtT=(ms,fl)=>{const t=Math[fl?'floor':'ceil'](ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),q=t%60,p=n=>String(n).padStart(2,'0');return(h?h+':':'')+p(m)+':'+p(q)};
 let AC=null;
 const unlock=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}};
-const beep=()=>{try{if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.value=660;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.8);o.connect(g);g.connect(AC.destination);o.start();o.stop(t+.8)}catch(e){}};
+const beep=(f=660,v=.2)=>{try{if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.8);o.connect(g);g.connect(AC.destination);o.start();o.stop(t+.8)}catch(e){}};
 function useNow(on){const[n,setN]=useState(Date.now());useEffect(()=>{if(!on)return;const f=()=>setN(Date.now()),id=setInterval(f,250);document.addEventListener('visibilitychange',f);return()=>{clearInterval(id);document.removeEventListener('visibilitychange',f)}},[on]);return n}
 const Mark=()=><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#F5F5F7" strokeWidth="2" strokeDasharray="12 3"/><rect x="11" y="5" width="2" height="9" rx="1" fill="#FF7A00"/></svg>;
 function Clock({h24}){
@@ -336,8 +357,9 @@ function Ambient({s,fs,go}){
  const p=fs.prefs,a=fs.a,live=a.status==='run'||a.status==='pause';
  useNow(a.status==='run');
  const hr=new Date().getHours(),g=hr>=5&&hr<12?'Günaydın':hr>=12&&hr<18?'İyi günler':hr>=18&&hr<23?'İyi akşamlar':'İyi geceler';
+ const tint=hr<5||hr>=22?'rgba(70,110,255,.09)':hr<11?'rgba(255,170,60,.10)':hr<18?'rgba(255,255,255,.035)':'rgba(255,122,0,.09)';
  const pulse=()=>{setTap(true);clearTimeout(tm.current);tm.current=setTimeout(()=>setTap(false),900)};
- return <div className={'amb'+(!p.anim||p.reduce?' still':'')+(tap?' tap':'')} onPointerDown={pulse}>
+ return <div className={'amb'+(!p.anim||p.reduce?' still':'')+(tap?' tap':'')} onPointerDown={pulse} style={{'--tint':tint}}>
   <header className="ah"><span className="row" style={{gap:10,flexWrap:'nowrap'}}><Mark/><Logo/></span><button className="ic" aria-label="Ayarlar" onClick={()=>go('settings')}>⚙︎</button></header>
   <div className="stage">
    <svg className="geo" viewBox="0 0 400 400" aria-hidden="true">
@@ -352,10 +374,12 @@ function Ambient({s,fs,go}){
   <div className="acts"><button className="btn p big" onClick={()=>go('focus')}>Odaklan</button><button className="btn big" onClick={()=>go('home')}>Görevler</button></div>
  </div>;
 }
+const DN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 const MODES=[['pomo','Pomodoro'],['stop','Kronometre'],['custom','Özel süre']];
-function Focus({s,fs,setFs,go,ask,toast}){
+function Focus({s,setS,fs,setFs,go,ask,toast}){
  const a=fs.a,live=a.status==='run'||a.status==='pause',cd=a.mode!=='stop';
- const[cm,setCm]=useState(String(fs.custom));
+ const[cm,setCm]=useState(String(fs.custom)),[deep,setDeep]=useState(false),[poke,setPoke]=useState(0);
+ useEffect(()=>{setDeep(false);if(a.status!=='run')return;const t=setTimeout(()=>setDeep(true),4000);return()=>clearTimeout(t)},[a.status,poke]);
  useNow(a.status==='run');
  const e=el(a),total=a.status==='idle'?mk(fs.prefs,a.mode,a.phase,fs.custom).total:a.total;
  const ms=cd?Math.max(0,total-e):e,prog=cd?(total?1-ms/total:0):(e%6e4)/6e4,R=104,C=2*Math.PI*R;
@@ -364,27 +388,32 @@ function Focus({s,fs,setFs,go,ask,toast}){
  const guard=(fn,txt)=>live&&e>0?ask(txt,()=>act(fn)):act(fn);
  const tk=a.taskKey.split('|'),tl=s.lists.find(l=>l.id===tk[0]),tt=tl&&tl.tasks.find(t=>t.id===tk[1]&&!t.done);
  const ds=new Date().toDateString(),todays=fs.sessions.filter(x=>x.completed&&new Date(x.ts).toDateString()===ds),mins=Math.round(todays.reduce((n,x)=>n+x.actual,0)/6e4);
+ const rk=a.res?a.res.task.split('|'):[],rl=s.lists.find(l=>l.id===rk[0]),rt=rl&&rl.tasks.find(t=>t.id===rk[1]&&!t.done);
+ const finTask=()=>{setS(x=>({...x,lists:x.lists.map(l=>l.id===rk[0]?{...l,tasks:l.tasks.map(t=>t.id===rk[1]?{...t,done:true,doneAt:today()}:t)}:l)}));act(FA.clr);toast('Görev tamamlandı')};
+ const wk=Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-i));const k=d.toDateString();return{d,m:fs.sessions.filter(x=>new Date(x.ts).toDateString()===k).reduce((n,x)=>n+x.actual,0)}}),mx=Math.max(...wk.map(x=>x.m),1);
  const bad=a.mode==='custom'&&!(Math.floor(+cm)>=1&&Math.floor(+cm)<=600&&/^\d+$/.test(cm));
- return <div className="foc">
-  <div className="row"><button className="ic" aria-label="Geri" onClick={()=>go('ambient')}>←</button><span className="fl sp">NOCTIS FOCUS</span><span className="mu sm">{MODES.find(m=>m[0]===a.mode)[1]}</span></div>
+ return <div className={'foc'+(deep?' deep':'')} onPointerDown={()=>setPoke(n=>n+1)}>
+  <div className="row dim"><button className="ic" aria-label="Geri" onClick={()=>go('ambient')}>←</button><span className="fl sp">NOCTIS FOCUS</span><span className="mu sm">{MODES.find(m=>m[0]===a.mode)[1]}</span></div>
   <div className="fring"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r={R} className="ft"/><circle cx="120" cy="120" r={R} className="fp" strokeDasharray={C} strokeDashoffset={C*(1-prog)} transform="rotate(-90 120 120)"/></svg>
    <div className="fc"><div className="ftm" role="timer" aria-label={lab}>{fmtT(ms,!cd)}</div><div className="mu sm">{lab}{a.mode==='pomo'&&a.phase==='work'?' · '+(fs.cycle%4+1)+'/4':''}</div></div></div>
   {tt&&<div className="ftk">{tt.title}</div>}
   {a.msg&&a.status==='idle'&&<div className="mu sm" style={{textAlign:'center',marginTop:4}}>{a.msg}</div>}
-  <div className="row" style={{justifyContent:'center',gap:10,margin:'18px 0'}}>
+  {a.res&&<div className="res"><div>Seans tamamlandı · {Math.max(1,Math.round(a.res.ms/6e4))} dk</div>{rt&&<div className="mu sm">{rt.title}</div>}<div className="row" style={{justifyContent:'center',marginTop:10}}>{rt&&<button className="btn p" onClick={finTask}>Görevi tamamla</button>}<button className="btn" onClick={()=>act(FA.clr)}>Kapat</button></div></div>}
+  <div className="row dim" style={{justifyContent:'center',gap:10,margin:'18px 0'}}>
    {a.status==='done'?<button className="btn p big" onClick={()=>act(FA.reset)}>Yeni oturum</button>:<>
-    <button className="btn p big" disabled={bad&&a.status==='idle'} onClick={()=>{if(fs.prefs.sound)unlock();act(a.status==='run'?FA.pause:FA.start)}}>{a.status==='run'?'Duraklat':a.status==='pause'?'Devam et':'Başlat'}</button>
+    <button className="btn p big" disabled={bad&&a.status==='idle'} onClick={()=>{if(fs.prefs.sound){unlock();beep(440,.05)}act(a.status==='run'?FA.pause:FA.start)}}>{a.status==='run'?'Duraklat':a.status==='pause'?'Devam et':'Başlat'}</button>
     {live&&<button className="btn big" onClick={()=>ask('Oturum bitirilsin ve kaydedilsin mi?',()=>act(FA.finish))}>Bitir</button>}
     {a.mode==='pomo'&&<button className="btn big" onClick={()=>guard(FA.skip,'Sonraki aşamaya geçilsin mi? Mevcut aşama bitirilir.')}>Atla</button>}</>}
   </div>
-  <div className="seg3" role="tablist" aria-label="Mod">{MODES.map(([k,n])=><button key={k} role="tab" aria-selected={a.mode===k} className={'chip'+(a.mode===k?' on':'')} onClick={()=>a.mode!==k&&guard(p=>FA.mode(p,k),'Aktif oturum iptal edilsin ve mod değiştirilsin mi?')}>{n}</button>)}</div>
+  <div className="seg3 dim" role="tablist" aria-label="Mod">{MODES.map(([k,n])=><button key={k} role="tab" aria-selected={a.mode===k} className={'chip'+(a.mode===k?' on':'')} onClick={()=>a.mode!==k&&guard(p=>FA.mode(p,k),'Aktif oturum iptal edilsin ve mod değiştirilsin mi?')}>{n}</button>)}</div>
   {a.mode==='custom'&&a.status==='idle'&&<div className="row" style={{justifyContent:'center',marginBottom:14}}>
    {[5,15,25,30,45,60].map(m=><button key={m} className={'chip'+(fs.custom===m?' on':'')} onClick={()=>{setCm(String(m));act(p=>FA.custom(p,m))}}>{m} dk</button>)}
    <input type="number" inputMode="numeric" min="1" max="600" aria-label="Özel süre (dakika)" value={cm} style={{width:90}} onChange={ev=>{setCm(ev.target.value);const v=ev.target.value;if(/^\d+$/.test(v)&&+v>=1&&+v<=600)act(p=>FA.custom(p,+v))}}/>
    {bad&&<div className="sm" style={{color:'var(--rd)',width:'100%',textAlign:'center'}}>1–600 dakika arası bir değer girin</div>}</div>}
-  <label className="mu sm" htmlFor="ftask">Görev (isteğe bağlı)</label>
-  <select id="ftask" value={tt?a.taskKey:''} onChange={ev=>act(p=>FA.task(p,ev.target.value))}><option value="">Görevsiz odak</option>{s.lists.flatMap(l=>l.tasks.filter(t=>!t.done).map(t=><option key={t.id} value={l.id+'|'+t.id}>{t.title} · {l.name}</option>))}</select>
-  {todays.length>0&&<div className="mu sm" style={{textAlign:'center',marginTop:14}}>Bugün: {todays.length} seans · {mins} dk</div>}
+  <label className="mu sm dim" htmlFor="ftask">Görev (isteğe bağlı)</label>
+  <select id="ftask" className="dim" value={tt?a.taskKey:''} onChange={ev=>act(p=>FA.task(p,ev.target.value))}><option value="">Görevsiz odak</option>{s.lists.flatMap(l=>l.tasks.filter(t=>!t.done).map(t=><option key={t.id} value={l.id+'|'+t.id}>{t.title} · {l.name}</option>))}</select>
+  {todays.length>0&&<div className="mu sm dim" style={{textAlign:'center',marginTop:14}}>Bugün: {todays.length} seans · {mins} dk</div>}
+  {fs.sessions.length>0&&<div className="wk dim" role="img" aria-label="Son 7 gün odak süresi">{wk.map((x,i)=><div key={i} title={Math.round(x.m/6e4)+' dk'}><i style={{height:Math.max(3,x.m/mx*40)}}/><span>{DN[x.d.getDay()]}</span></div>)}</div>}
  </div>;
 }
 function App(){
@@ -409,7 +438,7 @@ function App(){
  return <>
   <nav aria-label="Ana gezinme" className={v.p==='focus'?'hide':''}><Logo/>{nav.map(([k,n,i])=><button key={k} className={(v.p===k||(k==='lists'&&v.p==='list'))?'on':''} onClick={()=>go(k)} aria-current={v.p===k?'page':undefined}><b aria-hidden>{i}</b>{n}</button>)}<div className="foot">Kişisel görev ve kontrol listesi</div></nav>
   <main><div>
-   {v.p==='ambient'&&<Ambient s={s} fs={fs} go={go}/>}{v.p==='focus'&&<Focus s={s} fs={fs} setFs={setFs} go={go} ask={ask} toast={toast}/>}{v.p==='home'&&<Home s={s} go={go} touchT={touchT} newList={()=>setLf({})} newTask={newTask}/>}
+   {v.p==='ambient'&&<Ambient s={s} fs={fs} go={go}/>}{v.p==='focus'&&<Focus s={s} setS={setS} fs={fs} setFs={setFs} go={go} ask={ask} toast={toast}/>}{v.p==='home'&&<Home s={s} go={go} touchT={touchT} newList={()=>setLf({})} newTask={newTask}/>}
    {v.p==='lists'&&<Lists s={s} go={go} newList={()=>setLf({})} editList={l=>setLf(l)} delList={delList}/>}
    {cur&&<ListView key={cur.id} l={cur} cat={s.cats.find(c=>c.id===cur.cat)} back={()=>go('lists')} patch={patch} ask={ask} toast={toast} editList={l=>setLf(l)} delList={delList}/>}
    {v.p==='list'&&!cur&&<Empty t="Liste bulunamadı" d="Silinmiş olabilir." a={<button className="btn" onClick={()=>go('lists')}>Listelere dön</button>}/>}
@@ -423,6 +452,6 @@ function App(){
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
-<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))</script>
+<script>document.addEventListener('gesturestart',e=>e.preventDefault());if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))</script>
 </body>
 </html>
