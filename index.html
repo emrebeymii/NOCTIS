@@ -198,6 +198,19 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const COLORS=['#FF7A00','#F5C542','#4ADE80','#38BDF8','#A78BFA','#F472B6'];
 const PRI={low:'Düşük',normal:'Normal',high:'Yüksek'};
+const REPL={daily:'Her gün',weekdays:'Hafta içi',weekly:'Her hafta',monthly:'Her ay',days:'Seçili günler'};
+const REPS=['none',...Object.keys(REPL)];
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const addD=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ymd(d)};
+function nextDue(t){const b=t.due&&t.due>today()?t.due:today(),r=t.rep;
+ if(r==='daily')return addD(b,1);if(r==='weekly')return addD(b,7);
+ if(r==='weekdays'){let n=addD(b,1);while([0,6].includes(pd(n).getDay()))n=addD(n,1);return n}
+ if(r==='days'&&t.days&&t.days.length){let n=addD(b,1);for(let i=0;i<8&&!t.days.includes(pd(n).getDay());i++)n=addD(n,1);return n}
+ if(r==='monthly'){const d=pd(b),x=new Date(d.getFullYear(),d.getMonth()+1,1);x.setDate(Math.min(d.getDate(),new Date(x.getFullYear(),x.getMonth()+1,0).getDate()));return ymd(x)}
+ return addD(b,1)}
+const tog=t=>{const d=!t.done;return{...t,done:d,doneAt:d?today():null,next:d&&t.rep&&t.rep!=='none'?nextDue(t):null}};
+const roll=x=>{let c=false;const lists=x.lists.map(l=>{let lc=false;const tasks=l.tasks.map(t=>{if(t.done&&t.next&&t.next<=today()){lc=true;return{...t,done:false,doneAt:null,due:t.next,next:null}}return t});if(lc){c=true;return{...l,tasks}}return l});return c?{...x,lists}:x};
 const PO={high:0,normal:1,low:2};
 const CATS=['İş','Eğitim','Kişisel','Finans','Projeler'].map(n=>({id:'c-'+n,name:n}));
 const T=(title,pri='normal',due=null,done=false)=>({id:uid(),title,desc:'',done,doneAt:done?today():null,pri,due,created:today()});
@@ -211,7 +224,7 @@ function validate(d){
  const lists=d.lists.map(l=>{if(!l||!isStr(l.id)||!isStr(l.name)||!Array.isArray(l.tasks))throw new Error('Liste verisi bozuk');
   return{id:l.id,name:l.name.slice(0,80),desc:isStr(l.desc)?l.desc:'',color:isStr(l.color)?l.color:COLORS[0],cat:isStr(l.cat)?l.cat:'',created:isStr(l.created)?l.created:today(),used:+l.used||0,
   tasks:l.tasks.map(t=>{if(!t||!isStr(t.id)||!isStr(t.title))throw new Error('Görev verisi bozuk');
-   return{id:t.id,title:t.title.slice(0,200),desc:isStr(t.desc)?t.desc:'',done:!!t.done,doneAt:isStr(t.doneAt)?t.doneAt:null,pri:PO[t.pri]!==undefined?t.pri:'normal',due:isStr(t.due)&&t.due?t.due:null,created:isStr(t.created)?t.created:today()}})}});
+   return{id:t.id,title:t.title.slice(0,200),desc:isStr(t.desc)?t.desc:'',done:!!t.done,doneAt:isStr(t.doneAt)?t.doneAt:null,pri:PO[t.pri]!==undefined?t.pri:'normal',due:isStr(t.due)&&t.due?t.due:null,created:isStr(t.created)?t.created:today(),rep:REPS.includes(t.rep)?t.rep:'none',days:Array.isArray(t.days)?t.days.filter(n=>n>=0&&n<=6):[],next:isStr(t.next)&&t.next?t.next:null}})}});
  return{name:isStr(d.name)?d.name.slice(0,40):'',cats,lists};
 }
 function load(){try{const r=localStorage.getItem(KEY);if(r)return validate(JSON.parse(r))}catch(e){}return seed()}
@@ -236,14 +249,16 @@ function ListForm({data,cats,onSave,onClose}){
   <div className="row" style={{marginTop:20,justifyContent:'flex-end'}}><button type="button" className="btn" onClick={onClose}>Vazgeç</button><button className="btn p">Kaydet</button></div></form></Modal>;
 }
 function TaskForm({data,onSave,onClose}){
- const [f,setF]=useState(data||{title:'',desc:'',pri:'normal',due:''});
+ const [f,setF]=useState(data||{title:'',desc:'',pri:'normal',due:'',rep:'none',days:[]});
  const set=k=>e=>setF({...f,[k]:e.target.value});
- const go=e=>{e.preventDefault();if(f.title.trim())onSave({...f,title:f.title.trim(),due:f.due||null})};
+ const go=e=>{e.preventDefault();if(f.title.trim())onSave({...f,title:f.title.trim(),due:f.due||null,rep:(f.rep==='days'&&!(f.days||[]).length)?'none':(f.rep||'none')})};
  return <Modal title={data?'Görevi düzenle':'Yeni görev'} onClose={onClose}><form onSubmit={go}>
   <label htmlFor="tt">Başlık</label><input id="tt" autoFocus value={f.title} onChange={set('title')} maxLength={200} required/>
   <label htmlFor="td">Açıklama (isteğe bağlı)</label><textarea id="td" value={f.desc} onChange={set('desc')}/>
   <div className="row" style={{alignItems:'flex-start'}}><div className="sp"><label htmlFor="tp">Öncelik</label><select id="tp" value={f.pri} onChange={set('pri')}>{Object.entries(PRI).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
   <div className="sp"><label htmlFor="tdu">Son tarih</label><input id="tdu" type="date" value={f.due||''} onChange={set('due')}/></div></div>
+  <label htmlFor="tr">Tekrar</label><select id="tr" value={f.rep||'none'} onChange={set('rep')}><option value="none">Tekrarlama</option><option value="daily">Her gün</option><option value="weekdays">Hafta içi</option><option value="weekly">Her hafta</option><option value="monthly">Her ay</option><option value="days">Belirli günler</option></select>
+  {f.rep==='days'&&<div className="row" style={{marginTop:8}}>{[1,2,3,4,5,6,0].map(n=>{const on=(f.days||[]).includes(n);return <button type="button" key={n} aria-pressed={on} className={'chip'+(on?' on':'')} onClick={()=>setF({...f,days:on?f.days.filter(x=>x!==n):[...(f.days||[]),n]})}>{DN[n]}</button>})}</div>}
   <div className="row" style={{marginTop:20,justifyContent:'flex-end'}}><button type="button" className="btn" onClick={onClose}>Vazgeç</button><button className="btn p">Kaydet</button></div></form></Modal>;
 }
 const Empty=({t,d,a})=><div className="empty"><b>{t}</b>{d}{a&&<div style={{marginTop:14}}>{a}</div>}</div>;
@@ -255,7 +270,7 @@ function TaskRow({t,list,i,n,canMove,onToggle,onEdit,onDel,onMove,dnd}){
   <button className={'chk'+(t.done?' on':'')} role="checkbox" aria-checked={t.done} aria-label={'Tamamla: '+t.title} onClick={onToggle}>{t.done?'✓':''}</button>
   <div className="sp" style={{minWidth:0}}><div className="tt" style={{wordBreak:'break-word'}}>{t.title}</div>
    {t.desc&&<div className="mu sm">{t.desc}</div>}
-   <div className="row" style={{marginTop:4}}><span className={'tag '+t.pri}>{PRI[t.pri]}</span>{t.due&&<span className={'tag'+(late?' late':'')}>{late?'Gecikti · ':''}{fmt(t.due)}</span>}{list&&<span className="tag"><span className="dot" style={{background:list.color,width:7,height:7}}/> {list.name}</span>}</div></div>
+   <div className="row" style={{marginTop:4}}><span className={'tag '+t.pri}>{PRI[t.pri]}</span>{t.rep&&t.rep!=='none'&&<span className="tag">↻ {REPL[t.rep]}</span>}{t.due&&<span className={'tag'+(late?' late':'')}>{late?'Gecikti · ':''}{fmt(t.due)}</span>}{list&&<span className="tag"><span className="dot" style={{background:list.color,width:7,height:7}}/> {list.name}</span>}</div></div>
   {canMove&&<div className="row" style={{gap:0,flexDirection:'column'}}><button className="ic" style={{height:22}} disabled={i===0} aria-label="Yukarı taşı" onClick={()=>onMove(-1)}>▲</button><button className="ic" style={{height:22}} disabled={i===n-1} aria-label="Aşağı taşı" onClick={()=>onMove(1)}>▼</button></div>}
   <button className="ic" aria-label="Düzenle" onClick={onEdit}>✎</button><button className="ic" aria-label="Sil" onClick={onDel}>✕</button></div>;
 }
@@ -308,7 +323,7 @@ function ListView({l,cat,back,patch,ask,toast,editList,delList}){
   if(sort==='new')r=[...r].sort((a,b)=>b.created.localeCompare(a.created));
   return r},[l,q,fil,sort]);
  const move=(id,to)=>set(ts=>{const i=ts.findIndex(t=>t.id===id),j=Math.max(0,Math.min(ts.length-1,to));if(i<0||i===j)return ts;const a=[...ts];const[x]=a.splice(i,1);a.splice(j,0,x);return a});
- const save=f=>{if(ed.id){set(ts=>ts.map(t=>t.id===ed.id?{...t,...f}:t));toast('Görev güncellendi')}else{set(ts=>[...ts,{id:uid(),done:false,doneAt:null,created:today(),...f}]);toast('Görev eklendi')}setEd(null)};
+ const save=f=>{if(ed.id){set(ts=>ts.map(t=>t.id===ed.id?{...t,...f}:t));toast('Görev güncellendi')}else{set(ts=>[{id:uid(),done:false,doneAt:null,created:today(),...f},...ts]);toast('Görev eklendi')}setEd(null)};
  useEffect(()=>{const f=e=>{if(e.key==='n'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)&&!document.querySelector('.ov')){e.preventDefault();setEd({})}};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
  return <div><button className="btn" onClick={back}>← Listeler</button>
   <div className="row" style={{margin:'14px 0 4px'}}><span className="dot" style={{background:l.color,width:14,height:14}}/><h1 className="sp">{l.name}</h1><button className="ic" aria-label="Listeyi düzenle" onClick={()=>editList(l)}>✎</button><button className="ic" aria-label="Listeyi sil" onClick={()=>delList(l)}>✕</button></div>
@@ -317,7 +332,7 @@ function ListView({l,cat,back,patch,ask,toast,editList,delList}){
   <div className="row" style={{marginBottom:12}}>{[['all','Tümü'],['open','Bekleyen'],['done','Biten']].map(([k,v])=><button key={k} className={'chip'+(fil===k?' on':'')} onClick={()=>setFil(k)}>{v}</button>)}
    <select aria-label="Sırala" value={sort} onChange={e=>setSort(e.target.value)} style={{width:'auto',minHeight:32,padding:'4px 8px',marginLeft:'auto'}}><option value="manual">Elle sıralama</option><option value="pri">Öncelik</option><option value="due">Son tarih</option><option value="new">En yeni</option></select></div>
   {rows.length?rows.map((t,i)=><TaskRow key={t.id} t={t} i={i} n={rows.length} canMove={manual}
-   onToggle={()=>set(ts=>ts.map(x=>x.id===t.id?{...x,done:!x.done,doneAt:!x.done?today():null}:x))} onEdit={()=>setEd(t)}
+   onToggle={()=>{set(ts=>ts.map(x=>x.id===t.id?tog(x):x));if(!t.done&&t.rep&&t.rep!=='none')toast('Sonraki: '+fmt(nextDue(t)))}} onEdit={()=>setEd(t)}
    onDel={()=>ask('“'+t.title+'” görevi silinsin mi?',()=>{set(ts=>ts.filter(x=>x.id!==t.id));toast('Görev silindi')})}
    onMove={d=>move(t.id,l.tasks.findIndex(x=>x.id===t.id)+d)}
    dnd={manual?{draggable:true,className:'task'+(drag===t.id?' drag':''),onDragStart:()=>setDrag(t.id),onDragEnd:()=>setDrag(null),onDragOver:e=>e.preventDefault(),onDrop:()=>{if(drag&&drag!==t.id)move(drag,l.tasks.findIndex(x=>x.id===t.id));setDrag(null)}}:{}}/>)
@@ -422,7 +437,7 @@ function Focus({s,setS,fs,setFs,go,ask,toast}){
  const tk=a.taskKey.split('|'),tl=s.lists.find(l=>l.id===tk[0]),tt=tl&&tl.tasks.find(t=>t.id===tk[1]&&!t.done);
  const ds=new Date().toDateString(),todays=fs.sessions.filter(x=>x.completed&&new Date(x.ts).toDateString()===ds),mins=Math.round(todays.reduce((n,x)=>n+x.actual,0)/6e4);
  const rk=a.res?a.res.task.split('|'):[],rl=s.lists.find(l=>l.id===rk[0]),rt=rl&&rl.tasks.find(t=>t.id===rk[1]&&!t.done);
- const finTask=()=>{setS(x=>({...x,lists:x.lists.map(l=>l.id===rk[0]?{...l,tasks:l.tasks.map(t=>t.id===rk[1]?{...t,done:true,doneAt:today()}:t)}:l)}));act(FA.clr);toast('Görev tamamlandı')};
+ const finTask=()=>{setS(x=>({...x,lists:x.lists.map(l=>l.id===rk[0]?{...l,tasks:l.tasks.map(t=>t.id===rk[1]?tog({...t,done:false}):t)}:l)}));act(FA.clr);toast('Görev tamamlandı')};
  const wk=Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-i));const k=d.toDateString();return{d,m:fs.sessions.filter(x=>new Date(x.ts).toDateString()===k).reduce((n,x)=>n+x.actual,0)}}),mx=Math.max(...wk.map(x=>x.m),1);
  const bad=a.mode==='custom'&&!(Math.floor(+cm)>=1&&Math.floor(+cm)<=600&&/^\d+$/.test(cm));
  return <div className={'foc'+(deep?' deep':'')} onPointerDown={()=>setPoke(n=>n+1)}>
@@ -453,6 +468,7 @@ function App(){
  const [fs,setFs]=useState(loadFs),[s,setS]=useState(load),[v,setV]=useState({p:'ambient'}),[cf,setCf]=useState(null),[ts,setTs]=useState([]),[lf,setLf]=useState(null),[tf,setTf]=useState(false);
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){toast('Veriler kaydedilemedi (depolama dolu veya kapalı)',1)}},[s]);
  useEffect(()=>{try{localStorage.setItem(FK,JSON.stringify(fs))}catch(e){}},[fs]);
+ useEffect(()=>{const f=()=>setS(roll),id=setInterval(f,60000);f();document.addEventListener('visibilitychange',f);return()=>{clearInterval(id);document.removeEventListener('visibilitychange',f)}},[]);
  useEffect(()=>{const a=fs.a;if(a.status!=='run'||a.mode==='stop')return;
   const chk=()=>{if(el(a)>=a.total){setFs(FA.complete);if(fs.prefs.sound)beep();toast(a.mode==='pomo'&&a.phase==='work'?'Odaklanma tamamlandı':'Süre doldu')}};
   chk();const id=setInterval(chk,500);document.addEventListener('visibilitychange',chk);return()=>{clearInterval(id);document.removeEventListener('visibilitychange',chk)}},[fs.a]);
@@ -460,7 +476,7 @@ function App(){
  const ask=(text,ok)=>setCf({text,ok});
  const go=(p,id)=>{setV({p,id});if(id)setS(x=>({...x,lists:x.lists.map(l=>l.id===id?{...l,used:Date.now()}:l)}));window.scrollTo(0,0)};
  const patch=(id,fn)=>setS(x=>({...x,lists:x.lists.map(l=>l.id===id?{...l,used:Date.now(),tasks:fn(l.tasks)}:l)}));
- const touchT=(lid,tid)=>patch(lid,ts=>ts.map(t=>t.id===tid?{...t,done:!t.done,doneAt:!t.done?today():null}:t));
+ const touchT=(lid,tid)=>patch(lid,ts=>ts.map(t=>t.id===tid?tog(t):t));
  const saveList=(f,nc)=>{let cat=f.cat,cats=s.cats;if(nc){const ex=cats.find(c=>c.name.toLowerCase()===nc.toLowerCase());if(ex)cat=ex.id;else{cat=uid();cats=[...cats,{id:cat,name:nc}]}}
   setS(x=>({...x,cats,lists:f.id?x.lists.map(l=>l.id===f.id?{...l,...f,cat}:l):[{...f,cat,id:uid(),created:today(),used:Date.now(),tasks:[]},...x.lists]}));toast(f.id?'Liste güncellendi':'Liste oluşturuldu');setLf(null)};
  const delList=l=>ask('“'+l.name+'” listesi ve içindeki '+l.tasks.length+' görev silinsin mi?',()=>{setS(x=>({...x,lists:x.lists.filter(y=>y.id!==l.id)}));if(v.id===l.id)setV({p:'lists'});toast('Liste silindi')});
