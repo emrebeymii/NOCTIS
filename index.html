@@ -116,6 +116,13 @@ main>div>div,.grid>*{animation:fi .32s ease backwards}
 nav.hide{display:none}@media(min-width:860px){nav.hide~main{margin-left:0}}
 .sw{display:flex;justify-content:space-between;align-items:center;margin:0;padding:10px 0;color:var(--tx);font-size:15px}
 .sw input{width:22px;min-height:22px;height:22px;accent-color:var(--ac)}
+
+/* v5: ambient ekranı iPhone'a sığdır */
+.amb{position:fixed;inset:0;z-index:5;min-height:0;justify-content:flex-start;gap:8px;animation:none;padding:calc(env(safe-area-inset-top,0px) + 14px) 18px calc(78px + env(safe-area-inset-bottom,0px))}
+.ah{flex:none}.acts{flex:none;margin-bottom:6px}
+.stage{flex:1;min-height:0;width:100%;aspect-ratio:auto}
+.clk{font-size:min(15vw,66px)}
+@media(min-width:860px){.amb{left:220px;padding-bottom:28px}}
 </style>
 <meta name="theme-color" content="#0e0e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -331,7 +338,7 @@ function Ambient({s,fs,go}){
  const hr=new Date().getHours(),g=hr>=5&&hr<12?'Günaydın':hr>=12&&hr<18?'İyi günler':hr>=18&&hr<23?'İyi akşamlar':'İyi geceler';
  const pulse=()=>{setTap(true);clearTimeout(tm.current);tm.current=setTimeout(()=>setTap(false),900)};
  return <div className={'amb'+(!p.anim||p.reduce?' still':'')+(tap?' tap':'')} onPointerDown={pulse}>
-  <header className="ah"><span className="row" style={{gap:10,flexWrap:'nowrap'}}><Mark/><Logo/></span><button className="ic" aria-label="Ayarlar" onClick={()=>go('settings')}>⚙</button></header>
+  <header className="ah"><span className="row" style={{gap:10,flexWrap:'nowrap'}}><Mark/><Logo/></span><button className="ic" aria-label="Ayarlar" onClick={()=>go('settings')}>⚙︎</button></header>
   <div className="stage">
    <svg className="geo" viewBox="0 0 400 400" aria-hidden="true">
     <g className="r1"><circle cx="200" cy="200" r="190" strokeDasharray="1 9"/><circle cx="200" cy="200" r="166" strokeDasharray="150 30 40 30"/></g>
@@ -398,7 +405,7 @@ function App(){
  const newTask=()=>{if(!s.lists.length)return toast('Önce bir liste oluştur',1);setTf(true)};
  useEffect(()=>{const f=e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){const i=document.getElementById('search');if(i){e.preventDefault();i.focus()}}};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
  const cur=v.p==='list'&&s.lists.find(l=>l.id===v.id);
- const nav=[['ambient','Ana','◔'],['focus','Odak','◉'],['home','Panel','◧'],['lists','Listeler','☰'],['settings','Ayarlar','⚙']];
+ const nav=[['ambient','Ana','◔'],['focus','Odak','◉'],['home','Panel','◧'],['lists','Listeler','☰'],['settings','Ayarlar','⚙︎']];
  return <>
   <nav aria-label="Ana gezinme" className={v.p==='focus'?'hide':''}><Logo/>{nav.map(([k,n,i])=><button key={k} className={(v.p===k||(k==='lists'&&v.p==='list'))?'on':''} onClick={()=>go(k)} aria-current={v.p===k?'page':undefined}><b aria-hidden>{i}</b>{n}</button>)}<div className="foot">Kişisel görev ve kontrol listesi</div></nav>
   <main><div>
