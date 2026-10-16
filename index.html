@@ -82,6 +82,40 @@ main>div>div,.grid>*{animation:fi .32s ease backwards}
 .rt{fill:var(--tx);font:700 25px -apple-system,"Inter",sans-serif}
 .hs{display:flex;flex-direction:column;gap:14px}.hs b{display:block;font-size:30px;line-height:1.05}
 @media(prefers-reduced-motion:reduce){.seg.on{animation:none!important}}
+
+/* v4: ambient + focus */
+:root{--bg:#0B0C0F;--s1:#15171C;--s2:#1B1E25;--bd:#292B32;--tx:#F5F5F7;--mu:#9297A2}
+.amb{min-height:calc(100dvh - 150px);display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:12px}
+.ah{width:100%;display:flex;justify-content:space-between;align-items:center}
+.stage{position:relative;width:min(94vw,440px);aspect-ratio:1;display:grid;place-items:center}
+.geo{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#3b3e47;stroke-width:1;animation:geoin 2.2s cubic-bezier(.2,.8,.2,1) backwards;transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.geo g{transform-origin:200px 200px}
+.geo .r1{animation:spin 90s linear infinite}.geo .r2{animation:spin 60s linear infinite reverse}.geo .r3{animation:spin 38s linear infinite}.geo .orb{animation:spin 52s linear infinite}
+.geo .arc{stroke:rgba(255,122,0,.4);stroke-width:1.5}
+.geo .dot{fill:var(--ac);stroke:none;opacity:.5;transition:opacity .5s}
+.amb.tap .geo{transform:scale(1.03) rotate(3deg)}.amb.tap .dot{opacity:1}
+.amb.still .geo *{animation:none!important}
+.ctr{position:relative;text-align:center}
+.clk{display:block;font-size:min(16.5vw,74px);font-weight:300;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1;animation:fi 1.4s backwards}
+.clk small{font-size:.28em;margin-left:.4em;color:var(--mu)}
+.dt{color:var(--mu);margin-top:12px;font-size:15px}.gr{color:var(--mu);margin-top:6px;font-size:14px}
+.live{margin-top:14px;background:none;border:1px solid var(--bd);border-radius:99px;padding:6px 14px;color:var(--ac);font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:10px;width:100%;max-width:420px}.acts .btn{flex:1}
+.big{min-height:52px;font-size:16px;padding:12px 22px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes geoin{from{opacity:0;transform:scale(.9)}}
+.foc{max-width:440px;margin:0 auto}
+.fl{letter-spacing:.24em;font-size:12px;color:var(--mu);text-align:center}
+.fring{position:relative;width:min(80vw,320px);aspect-ratio:1;margin:18px auto 6px}
+.fring svg{width:100%;height:100%}.ft{fill:none;stroke:#23252c;stroke-width:3}
+.fp{fill:none;stroke:var(--ac);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .3s linear}
+.fc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ftm{font-size:min(15vw,62px);font-weight:300;font-variant-numeric:tabular-nums;line-height:1.1}
+.ftk{text-align:center;margin:4px 0 0}
+.seg3{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 14px}
+nav.hide{display:none}@media(min-width:860px){nav.hide~main{margin-left:0}}
+.sw{display:flex;justify-content:space-between;align-items:center;margin:0;padding:10px 0;color:var(--tx);font-size:15px}
+.sw input{width:22px;min-height:22px;height:22px;accent-color:var(--ac)}
 </style>
 <meta name="theme-color" content="#0e0e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -234,7 +268,8 @@ function ListView({l,cat,back,patch,ask,toast,editList,delList}){
  </div>;
 }
 
-function Settings({s,setS,ask,toast}){
+function Settings({s,setS,ask,toast,fs,setFs}){
+ const pf=(k,v)=>setFs(p=>{const np={...p.prefs,[k]:v};return{...p,prefs:np,a:p.a.status==='idle'?mk(np,k==='mode'?v:p.a.mode,k==='mode'?'work':p.a.phase,p.custom,p.a.taskKey):p.a}});
  const [nm,setNm]=useState(s.name),[nc,setNc]=useState(''),fr=useRef();
  const exp=()=>{const b=new Blob([JSON.stringify({app:'NOCTIS',v:1,...s},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='noctis-yedek-'+today()+'.json';a.click();toast('Yedek dışa aktarıldı')};
  const imp=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();
@@ -244,14 +279,114 @@ function Settings({s,setS,ask,toast}){
   <h2>Profil</h2><div className="row"><input aria-label="Adın" placeholder="Adın (karşılama için)" value={nm} onChange={e=>setNm(e.target.value)} style={{flex:1}}/><button className="btn" onClick={()=>{setS(p=>({...p,name:nm.trim()}));toast('Ad kaydedildi')}}>Kaydet</button></div>
   <h2>Kategoriler</h2><div className="row">{s.cats.map(c=><span key={c.id} className="chip">{c.name} <button className="ic" style={{width:22,height:22}} aria-label={c.name+' kategorisini sil'} onClick={()=>ask('“'+c.name+'” kategorisi silinsin mi? Listeler kategorisiz kalır.',()=>{setS(p=>({...p,cats:p.cats.filter(x=>x.id!==c.id),lists:p.lists.map(l=>l.cat===c.id?{...l,cat:''}:l)}));toast('Kategori silindi')})}>✕</button></span>)}</div>
   <div className="row" style={{marginTop:10}}><input aria-label="Yeni kategori" placeholder="Yeni kategori" value={nc} onChange={e=>setNc(e.target.value)} style={{flex:1}}/><button className="btn" onClick={()=>{const n=nc.trim();if(!n)return;if(s.cats.some(c=>c.name.toLowerCase()===n.toLowerCase()))return toast('Bu kategori zaten var',1);setS(p=>({...p,cats:[...p.cats,{id:uid(),name:n}]}));setNc('');toast('Kategori eklendi')}}>Ekle</button></div>
+  <h2>Ortam ve Odak</h2>
+  <div className="card">{[['anim','Ambient animasyonları'],['reduce','Hareketi azalt'],['greet','Karşılama metni'],['h24','24 saat biçimi'],['sound','Sesli uyarı (uygulama açıkken)']].map(([k,n])=><label key={k} className="sw"><span>{n}</span><input type="checkbox" checked={!!fs.prefs[k]} onChange={e=>pf(k,e.target.checked)}/></label>)}
+   <label htmlFor="dm">Varsayılan Focus modu</label><select id="dm" value={fs.prefs.mode} onChange={e=>pf('mode',e.target.value)}><option value="pomo">Pomodoro</option><option value="stop">Kronometre</option><option value="custom">Özel süre</option></select>
+   <div className="row" style={{alignItems:'flex-end'}}>{[['work','Çalışma (dk)'],['short','Kısa mola (dk)'],['long','Uzun mola (dk)']].map(([k,n])=><div className="sp" key={k}><label htmlFor={'p'+k}>{n}</label><input id={'p'+k} type="number" inputMode="numeric" min="1" max="180" defaultValue={fs.prefs[k]} onBlur={e=>{const v=Math.floor(+e.target.value);if(v>=1&&v<=180)pf(k,v);else{e.target.value=fs.prefs[k];toast('1–180 dakika girin',1)}}}/></div>)}</div></div>
   <h2>Veri</h2><div className="row"><button className="btn" onClick={exp}>Yedeği dışa aktar (JSON)</button><button className="btn" onClick={()=>fr.current.click()}>Yedeği içe aktar</button><input ref={fr} type="file" accept="application/json,.json" hidden onChange={imp}/></div>
   <div className="row" style={{marginTop:10}}><button className="btn" onClick={()=>ask('Örnek veriler yeniden yüklensin mi? Mevcut verilerin silinir.',()=>{setS({...seed(),name:s.name});toast('Örnek veriler yüklendi')})}>Örnek verileri yükle</button><button className="btn d" onClick={()=>ask('Tüm listeler ve görevler kalıcı olarak silinsin mi?',()=>{setS({...s,lists:[]});toast('Tüm veriler silindi')})}>Tüm verileri sil</button></div>
   <p className="mu sm" style={{marginTop:24}}>Veriler yalnızca bu cihazda, tarayıcının localStorage alanında saklanır.</p></div>;
 }
 
+
+const FK='noctis.focus.v1';
+const DP={anim:true,reduce:false,greet:true,h24:true,sound:false,mode:'pomo',work:25,short:5,long:15};
+const mk=(p,mode,phase='work',custom=25,taskKey='')=>({mode,phase,status:'idle',startedAt:0,acc:0,total:mode==='stop'?0:mode==='custom'?custom*6e4:p[phase]*6e4,taskKey});
+const el=a=>a.acc+(a.status==='run'?Date.now()-a.startedAt:0);
+function loadFs(){let r=null;try{r=JSON.parse(localStorage.getItem(FK))}catch(e){}
+ const prefs={...DP,...(r&&r.prefs)},custom=(r&&+r.custom)||25;
+ return{prefs,custom,cycle:(r&&r.cycle)||0,sessions:(r&&Array.isArray(r.sessions)?r.sessions:[]),a:(r&&r.a&&r.a.mode&&r.a.status)?r.a:mk(prefs,prefs.mode,'work',custom)}}
+const rec=(p,done)=>{const a=p.a;if(a.phase!=='work')return p.sessions;const e=el(a),act=a.mode==='stop'?e:Math.min(e,a.total);if(act<1000)return p.sessions;
+ return[...p.sessions,{id:uid(),ts:Date.now(),mode:a.mode,task:a.taskKey,planned:a.total,actual:act,completed:done}].slice(-200)};
+const FA={
+ start:p=>{const a=p.a;return{...p,a:a.status==='idle'?{...a,status:'run',startedAt:Date.now(),acc:0,total:mk(p.prefs,a.mode,a.phase,p.custom).total}:{...a,status:'run',startedAt:Date.now()}}},
+ pause:p=>({...p,a:{...p.a,status:'pause',acc:el(p.a),startedAt:0}}),
+ complete:p=>{const a=p.a;if(a.status!=='run'||a.mode==='stop'||el(a)<a.total)return p;const sessions=rec(p,true);
+  if(a.mode==='pomo'){const c=a.phase==='work'?p.cycle+1:p.cycle,ph=a.phase==='work'?(c%4===0?'long':'short'):'work';return{...p,sessions,cycle:c,a:{...mk(p.prefs,'pomo',ph,p.custom,a.taskKey),msg:a.phase==='work'?'Odaklanma tamamlandı':'Mola bitti'}}}
+  return{...p,sessions,a:{...a,status:'done',acc:a.total,startedAt:0}}},
+ finish:p=>{const a=p.a,done=a.mode==='stop'||el(a)>=a.total;return{...p,sessions:rec(p,done),a:mk(p.prefs,a.mode,'work',p.custom,a.taskKey)}},
+ skip:p=>{const a=p.a;return{...p,sessions:rec(p,false),a:mk(p.prefs,'pomo',a.phase==='work'?'short':'work',p.custom,a.taskKey)}},
+ mode:(p,m)=>({...p,a:mk(p.prefs,m,'work',p.custom,p.a.taskKey)}),
+ custom:(p,c)=>({...p,custom:c,a:mk(p.prefs,'custom','work',c,p.a.taskKey)}),
+ task:(p,k)=>({...p,a:{...p.a,taskKey:k}}),
+ reset:p=>({...p,a:mk(p.prefs,p.a.mode,'work',p.custom,p.a.taskKey)})
+};
+const fmtT=(ms,fl)=>{const t=Math[fl?'floor':'ceil'](ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),q=t%60,p=n=>String(n).padStart(2,'0');return(h?h+':':'')+p(m)+':'+p(q)};
+let AC=null;
+const unlock=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}};
+const beep=()=>{try{if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.value=660;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.8);o.connect(g);g.connect(AC.destination);o.start();o.stop(t+.8)}catch(e){}};
+function useNow(on){const[n,setN]=useState(Date.now());useEffect(()=>{if(!on)return;const f=()=>setN(Date.now()),id=setInterval(f,250);document.addEventListener('visibilitychange',f);return()=>{clearInterval(id);document.removeEventListener('visibilitychange',f)}},[on]);return n}
+const Mark=()=><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#F5F5F7" strokeWidth="2" strokeDasharray="12 3"/><rect x="11" y="5" width="2" height="9" rx="1" fill="#FF7A00"/></svg>;
+function Clock({h24}){
+ const[n,setN]=useState(new Date());
+ useEffect(()=>{const id=setInterval(()=>setN(new Date()),1000);return()=>clearInterval(id)},[]);
+ const p=x=>String(x).padStart(2,'0');let h=n.getHours();if(!h24)h=h%12||12;
+ const dt=n.getDate()+' '+n.toLocaleDateString('tr-TR',{month:'long'})+' '+n.getFullYear()+', '+n.toLocaleDateString('tr-TR',{weekday:'long'});
+ return <><time className="clk" dateTime={n.toISOString()}>{p(h)}:{p(n.getMinutes())}:{p(n.getSeconds())}{!h24&&<small>{n.getHours()<12?'ÖÖ':'ÖS'}</small>}</time><div className="dt">{dt}</div></>;
+}
+function Ambient({s,fs,go}){
+ const[tap,setTap]=useState(false),tm=useRef();
+ const p=fs.prefs,a=fs.a,live=a.status==='run'||a.status==='pause';
+ useNow(a.status==='run');
+ const hr=new Date().getHours(),g=hr>=5&&hr<12?'Günaydın':hr>=12&&hr<18?'İyi günler':hr>=18&&hr<23?'İyi akşamlar':'İyi geceler';
+ const pulse=()=>{setTap(true);clearTimeout(tm.current);tm.current=setTimeout(()=>setTap(false),900)};
+ return <div className={'amb'+(!p.anim||p.reduce?' still':'')+(tap?' tap':'')} onPointerDown={pulse}>
+  <header className="ah"><span className="row" style={{gap:10,flexWrap:'nowrap'}}><Mark/><Logo/></span><button className="ic" aria-label="Ayarlar" onClick={()=>go('settings')}>⚙</button></header>
+  <div className="stage">
+   <svg className="geo" viewBox="0 0 400 400" aria-hidden="true">
+    <g className="r1"><circle cx="200" cy="200" r="190" strokeDasharray="1 9"/><circle cx="200" cy="200" r="166" strokeDasharray="150 30 40 30"/></g>
+    <g className="r2"><circle cx="200" cy="200" r="140" strokeDasharray="300 80"/><path className="arc" d="M200 54A146 146 0 0 1 340 160" /></g>
+    <g className="r3"><circle cx="200" cy="200" r="116" strokeDasharray="1 6"/></g>
+    <g className="orb"><circle className="dot" cx="200" cy="10" r="3.5"/></g>
+   </svg>
+   <div className="ctr"><Clock h24={p.h24}/>{p.greet&&<div className="gr">{g}{s.name?', '+s.name:''}.</div>}
+    {live&&<button className="live" onClick={()=>go('focus')}>● Odak sürüyor · {fmtT(a.mode==='stop'?el(a):Math.max(0,a.total-el(a)),a.mode==='stop')}</button>}</div>
+  </div>
+  <div className="acts"><button className="btn p big" onClick={()=>go('focus')}>Odaklan</button><button className="btn big" onClick={()=>go('home')}>Görevler</button></div>
+ </div>;
+}
+const MODES=[['pomo','Pomodoro'],['stop','Kronometre'],['custom','Özel süre']];
+function Focus({s,fs,setFs,go,ask,toast}){
+ const a=fs.a,live=a.status==='run'||a.status==='pause',cd=a.mode!=='stop';
+ const[cm,setCm]=useState(String(fs.custom));
+ useNow(a.status==='run');
+ const e=el(a),total=a.status==='idle'?mk(fs.prefs,a.mode,a.phase,fs.custom).total:a.total;
+ const ms=cd?Math.max(0,total-e):e,prog=cd?(total?1-ms/total:0):(e%6e4)/6e4,R=104,C=2*Math.PI*R;
+ const act=f=>setFs(f);
+ const lab=a.status==='done'?'Oturum tamamlandı':a.mode==='stop'?'Kronometre':a.mode==='custom'?'Özel süre':a.phase==='work'?'Odaklanma zamanı':a.phase==='short'?'Kısa mola':'Uzun mola';
+ const guard=(fn,txt)=>live&&e>0?ask(txt,()=>act(fn)):act(fn);
+ const tk=a.taskKey.split('|'),tl=s.lists.find(l=>l.id===tk[0]),tt=tl&&tl.tasks.find(t=>t.id===tk[1]&&!t.done);
+ const ds=new Date().toDateString(),todays=fs.sessions.filter(x=>x.completed&&new Date(x.ts).toDateString()===ds),mins=Math.round(todays.reduce((n,x)=>n+x.actual,0)/6e4);
+ const bad=a.mode==='custom'&&!(Math.floor(+cm)>=1&&Math.floor(+cm)<=600&&/^\d+$/.test(cm));
+ return <div className="foc">
+  <div className="row"><button className="ic" aria-label="Geri" onClick={()=>go('ambient')}>←</button><span className="fl sp">NOCTIS FOCUS</span><span className="mu sm">{MODES.find(m=>m[0]===a.mode)[1]}</span></div>
+  <div className="fring"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r={R} className="ft"/><circle cx="120" cy="120" r={R} className="fp" strokeDasharray={C} strokeDashoffset={C*(1-prog)} transform="rotate(-90 120 120)"/></svg>
+   <div className="fc"><div className="ftm" role="timer" aria-label={lab}>{fmtT(ms,!cd)}</div><div className="mu sm">{lab}{a.mode==='pomo'&&a.phase==='work'?' · '+(fs.cycle%4+1)+'/4':''}</div></div></div>
+  {tt&&<div className="ftk">{tt.title}</div>}
+  {a.msg&&a.status==='idle'&&<div className="mu sm" style={{textAlign:'center',marginTop:4}}>{a.msg}</div>}
+  <div className="row" style={{justifyContent:'center',gap:10,margin:'18px 0'}}>
+   {a.status==='done'?<button className="btn p big" onClick={()=>act(FA.reset)}>Yeni oturum</button>:<>
+    <button className="btn p big" disabled={bad&&a.status==='idle'} onClick={()=>{if(fs.prefs.sound)unlock();act(a.status==='run'?FA.pause:FA.start)}}>{a.status==='run'?'Duraklat':a.status==='pause'?'Devam et':'Başlat'}</button>
+    {live&&<button className="btn big" onClick={()=>ask('Oturum bitirilsin ve kaydedilsin mi?',()=>act(FA.finish))}>Bitir</button>}
+    {a.mode==='pomo'&&<button className="btn big" onClick={()=>guard(FA.skip,'Sonraki aşamaya geçilsin mi? Mevcut aşama bitirilir.')}>Atla</button>}</>}
+  </div>
+  <div className="seg3" role="tablist" aria-label="Mod">{MODES.map(([k,n])=><button key={k} role="tab" aria-selected={a.mode===k} className={'chip'+(a.mode===k?' on':'')} onClick={()=>a.mode!==k&&guard(p=>FA.mode(p,k),'Aktif oturum iptal edilsin ve mod değiştirilsin mi?')}>{n}</button>)}</div>
+  {a.mode==='custom'&&a.status==='idle'&&<div className="row" style={{justifyContent:'center',marginBottom:14}}>
+   {[5,15,25,30,45,60].map(m=><button key={m} className={'chip'+(fs.custom===m?' on':'')} onClick={()=>{setCm(String(m));act(p=>FA.custom(p,m))}}>{m} dk</button>)}
+   <input type="number" inputMode="numeric" min="1" max="600" aria-label="Özel süre (dakika)" value={cm} style={{width:90}} onChange={ev=>{setCm(ev.target.value);const v=ev.target.value;if(/^\d+$/.test(v)&&+v>=1&&+v<=600)act(p=>FA.custom(p,+v))}}/>
+   {bad&&<div className="sm" style={{color:'var(--rd)',width:'100%',textAlign:'center'}}>1–600 dakika arası bir değer girin</div>}</div>}
+  <label className="mu sm" htmlFor="ftask">Görev (isteğe bağlı)</label>
+  <select id="ftask" value={tt?a.taskKey:''} onChange={ev=>act(p=>FA.task(p,ev.target.value))}><option value="">Görevsiz odak</option>{s.lists.flatMap(l=>l.tasks.filter(t=>!t.done).map(t=><option key={t.id} value={l.id+'|'+t.id}>{t.title} · {l.name}</option>))}</select>
+  {todays.length>0&&<div className="mu sm" style={{textAlign:'center',marginTop:14}}>Bugün: {todays.length} seans · {mins} dk</div>}
+ </div>;
+}
 function App(){
- const [s,setS]=useState(load),[v,setV]=useState({p:'home'}),[cf,setCf]=useState(null),[ts,setTs]=useState([]),[lf,setLf]=useState(null),[tf,setTf]=useState(false);
+ const [fs,setFs]=useState(loadFs),[s,setS]=useState(load),[v,setV]=useState({p:'ambient'}),[cf,setCf]=useState(null),[ts,setTs]=useState([]),[lf,setLf]=useState(null),[tf,setTf]=useState(false);
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){toast('Veriler kaydedilemedi (depolama dolu veya kapalı)',1)}},[s]);
+ useEffect(()=>{try{localStorage.setItem(FK,JSON.stringify(fs))}catch(e){}},[fs]);
+ useEffect(()=>{const a=fs.a;if(a.status!=='run'||a.mode==='stop')return;
+  const chk=()=>{if(el(a)>=a.total){setFs(FA.complete);if(fs.prefs.sound)beep();toast(a.mode==='pomo'&&a.phase==='work'?'Odaklanma tamamlandı':'Süre doldu')}};
+  chk();const id=setInterval(chk,500);document.addEventListener('visibilitychange',chk);return()=>{clearInterval(id);document.removeEventListener('visibilitychange',chk)}},[fs.a]);
  const toast=(m,err)=>{const id=uid();setTs(t=>[...t,{id,m,err}]);setTimeout(()=>setTs(t=>t.filter(x=>x.id!==id)),3200)};
  const ask=(text,ok)=>setCf({text,ok});
  const go=(p,id)=>{setV({p,id});if(id)setS(x=>({...x,lists:x.lists.map(l=>l.id===id?{...l,used:Date.now()}:l)}));window.scrollTo(0,0)};
@@ -263,15 +398,15 @@ function App(){
  const newTask=()=>{if(!s.lists.length)return toast('Önce bir liste oluştur',1);setTf(true)};
  useEffect(()=>{const f=e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){const i=document.getElementById('search');if(i){e.preventDefault();i.focus()}}};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
  const cur=v.p==='list'&&s.lists.find(l=>l.id===v.id);
- const nav=[['home','Panel','◧'],['lists','Listeler','☰'],['settings','Ayarlar','⚙']];
+ const nav=[['ambient','Ana','◔'],['focus','Odak','◉'],['home','Panel','◧'],['lists','Listeler','☰'],['settings','Ayarlar','⚙']];
  return <>
-  <nav aria-label="Ana gezinme"><Logo/>{nav.map(([k,n,i])=><button key={k} className={(v.p===k||(k==='lists'&&v.p==='list'))?'on':''} onClick={()=>go(k)} aria-current={v.p===k?'page':undefined}><b aria-hidden>{i}</b>{n}</button>)}<div className="foot">Kişisel görev ve kontrol listesi</div></nav>
+  <nav aria-label="Ana gezinme" className={v.p==='focus'?'hide':''}><Logo/>{nav.map(([k,n,i])=><button key={k} className={(v.p===k||(k==='lists'&&v.p==='list'))?'on':''} onClick={()=>go(k)} aria-current={v.p===k?'page':undefined}><b aria-hidden>{i}</b>{n}</button>)}<div className="foot">Kişisel görev ve kontrol listesi</div></nav>
   <main><div>
-   {v.p==='home'&&<Home s={s} go={go} touchT={touchT} newList={()=>setLf({})} newTask={newTask}/>}
+   {v.p==='ambient'&&<Ambient s={s} fs={fs} go={go}/>}{v.p==='focus'&&<Focus s={s} fs={fs} setFs={setFs} go={go} ask={ask} toast={toast}/>}{v.p==='home'&&<Home s={s} go={go} touchT={touchT} newList={()=>setLf({})} newTask={newTask}/>}
    {v.p==='lists'&&<Lists s={s} go={go} newList={()=>setLf({})} editList={l=>setLf(l)} delList={delList}/>}
    {cur&&<ListView key={cur.id} l={cur} cat={s.cats.find(c=>c.id===cur.cat)} back={()=>go('lists')} patch={patch} ask={ask} toast={toast} editList={l=>setLf(l)} delList={delList}/>}
    {v.p==='list'&&!cur&&<Empty t="Liste bulunamadı" d="Silinmiş olabilir." a={<button className="btn" onClick={()=>go('lists')}>Listelere dön</button>}/>}
-   {v.p==='settings'&&<Settings s={s} setS={setS} ask={ask} toast={toast}/>}
+   {v.p==='settings'&&<Settings s={s} setS={setS} ask={ask} toast={toast} fs={fs} setFs={setFs}/>}
   </div></main>
   {lf&&<ListForm data={lf.id?lf:null} cats={s.cats} onSave={saveList} onClose={()=>setLf(null)}/>}
   {tf&&<Modal title="Hangi listeye eklensin?" onClose={()=>setTf(false)}>{s.lists.map(l=><button key={l.id} className="btn" style={{width:'100%',textAlign:'left',marginBottom:8}} onClick={()=>{setTf(false);go('list',l.id)}}><span className="dot" style={{background:l.color}}/> {l.name}</button>)}</Modal>}
